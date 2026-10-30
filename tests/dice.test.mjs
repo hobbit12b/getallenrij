@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { faceRotations, dieTransform } from '../dice.mjs';
+import { faceRotations, dieTransform, rollKeyframes } from '../dice.mjs';
 
 // Independently derive each face normal from its actual CSS orientation:
 // 1 is forward, 6 backward, 2 right, 5 left, 3 up, 4 down.
@@ -66,3 +66,14 @@ test('CSS transform remains a predictable four-rotation animation sequence', () 
   for (const invalid of [-1, 0.5, Infinity]) assert.throws(() => dieTransform(1, invalid), RangeError);
 });
 
+
+test('a repeated result still interpolates three full X spins and six Y spins', () => {
+  for (let value = 1; value <= 6; value++) {
+    const [start,end] = rollKeyframes(value,value).map(f=>rotationsFromCss(f.transform));
+    assert.deepEqual(start.map(r=>r[0]),end.map(r=>r[0]));
+    assert.equal(end[2][1]-start[2][1],1080);
+    assert.equal(end[3][1]-start[3][1],2160);
+    const halfway = start.map(([axis,degrees],i)=>[axis,degrees+(end[i][1]-degrees)*.125]);
+    assert.ok(Math.abs(applyCss(normals[value],halfway)[2]-applyCss(normals[value],start)[2])>.1);
+  }
+});

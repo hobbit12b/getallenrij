@@ -21,3 +21,8 @@ export function dieTransform(value, spins = 0) {
   const [x, y] = faceRotations[value];
   return `rotateX(-65deg) rotateY(-24deg) rotateX(${x + spins * 360}deg) rotateY(${y + spins * 720}deg)`;
 }
+
+/** Keep both endpoints as matching rotation functions: matrix interpolation loses full turns. */
+export function rollKeyframes(previous, next) {
+  return [{ transform: dieTransform(previous) }, { transform: dieTransform(next, 3) }];
+}
