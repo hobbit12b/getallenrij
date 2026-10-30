@@ -1,5 +1,5 @@
 import{createGame,roll,select,advanceTurn,score,remainingTurns,pause,resume}from'./engine.mjs';
-import{dieTransform,rollKeyframes}from'./dice.mjs';
+import{dieTransform,rollKeyframes}from'./dice.mjs?v=20261031b';
 const $=id=>document.getElementById(id),settings={mode:'computer',goal:'race',turnLimit:10},patterns={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
 let game,dieValue=1,rolling=false,lastWords='Tik op de dobbelsteen.',jobs=new Set(),animation,audio,autoPaused=false,run=0;const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 function speak(words){lastWords=words;$('announcement').textContent=words;if(!('speechSynthesis'in window))return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(words);u.lang='nl-NL';u.rate=.85;const v=speechSynthesis.getVoices().find(v=>v.lang.startsWith('nl'));if(v)u.voice=v;speechSynthesis.speak(u);}catch{}}
