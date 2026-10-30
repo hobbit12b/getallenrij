@@ -8,7 +8,7 @@ Een felle rand wijst de actieve kaartenrij aan. De luidspreker met herhaalpijl h
 
 ## Spelen
 
-Publiceer de hoofdmap met GitHub Pages (Settings → Pages → Deploy from a branch → main, / root). Open de gepubliceerde link in Safari. Kies Deel → Zet op beginscherm voor beeldvullend spelen. De indeling is gemaakt voor de iPad 9e generatie (810×1080 CSS-pixels). Nederlandse spraak gebruikt de beschikbare apparaatstem.
+Speel op https://hobbit12b.github.io/getallenrij/. Open deze link in Safari. Kies Deel → Zet op beginscherm voor beeldvullend spelen. De indeling is gemaakt voor de iPad 9e generatie (810×1080 CSS-pixels). Nederlandse spraak gebruikt de beschikbare apparaatstem.
 
 ## Lokaal
 

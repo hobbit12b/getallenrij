@@ -19,5 +19,5 @@ export function dieTransform(value, spins = 0) {
     throw new RangeError('Spins must be a non-negative integer');
   }
   const [x, y] = faceRotations[value];
-  return `rotateX(-78deg) rotateY(-24deg) rotateX(${x + spins * 360}deg) rotateY(${y + spins * 720}deg)`;
+  return `rotateX(-65deg) rotateY(-24deg) rotateX(${x + spins * 360}deg) rotateY(${y + spins * 720}deg)`;
 }
