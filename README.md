@@ -4,7 +4,7 @@ Spel voor groep 1–2 op een staande iPad. Gebruikt de aangeleverde illustraties
 
 Gooi en tik de kaart met hetzelfde aantal aan. Een herhaalde worp draait die kaart terug. Een verkeerde keuze verbruikt geen beurt. Kies als eerste alle zes om, of ieder tien beurten en daarna de meeste kaarten om. In de tweede spelvorm tonen eikels én een cijfer hoeveel beurten over zijn. Gelijkspel is mogelijk.
 
-Een felle rand wijst de actieve kaartenrij aan. De luidspreker met herhaalpijl herhaalt de laatste Nederlandse aanwijzing. De bovenkant van de houten 3D-dobbelsteen toont de worp met rode stippen. Karakters gebruiken de drie aangeleverde emoties.
+Een felle rand wijst de actieve kaartenrij aan. De luidsprekerknop herhaalt de laatste Nederlandse aanwijzing. De bovenkant van de houten 3D-dobbelsteen toont de worp met rode stippen. Karakters gebruiken de drie aangeleverde emoties.
 
 ## Spelen
 
