@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="190" viewBox="0 0 180 190">
+<defs><linearGradient id="wood" x2=".8" y2="1"><stop stop-color="#f7dca0"/><stop offset="1" stop-color="#c79350"/></linearGradient><linearGradient id="leaf" x2=".2" y2="1"><stop stop-color="#a6bf50"/><stop offset=".6" stop-color="#64872e"/><stop offset="1" stop-color="#3d6124"/></linearGradient><linearGradient id="door" x2="1" y2="1"><stop stop-color="#a3652d"/><stop offset="1" stop-color="#663a1c"/></linearGradient></defs>
+<ellipse cx="93" cy="176" rx="73" ry="10" fill="#48351e" opacity=".25"/>
+<path d="M38 77 90 32l54 47 4 87q-53 17-112 0Z" fill="url(#wood)" stroke="#724823" stroke-width="5" stroke-linejoin="round"/>
+<g fill="none" stroke="#ae793e" stroke-width="2" opacity=".6"><path d="m40 102 101 2m-101 19 102 2m-103 22 104 1M49 89l3 70m74-73-1 76"/></g>
+<path d="M18 84Q34 48 87 12q8-5 15 3 40 33 62 65-14 14-27 3L92 44 44 85Q31 98 18 84" fill="#3a5421" stroke="#4e4b22" stroke-width="5" stroke-linejoin="round"/>
+<path d="M17 79Q40 40 89 10q8-3 14 5 33 24 60 61-16 8-28-1L92 36 45 77Q31 91 17 79" fill="url(#leaf)" stroke="#446126" stroke-width="3"/>
+<g fill="none" stroke="#d6dd8a" stroke-width="2" opacity=".7"><path d="M29 75 91 22l58 49M47 57l-3 17m22-35-5 18m52-17 3 16m13-2 5 17"/></g>
+<path d="M69 169v-46q0-28 25-28 24 0 24 28v47" fill="url(#door)" stroke="#704524" stroke-width="4"/><path d="M79 121v42m13-57v58m12-43v44" stroke="#d19b51" stroke-width="2" opacity=".65"/><circle cx="105" cy="143" r="5" fill="#ffe5a1" stroke="#67451d" stroke-width="2"/>
+<circle cx="92" cy="70" r="13" fill="#ffe9a2" stroke="#85582c" stroke-width="4"/><path d="M80 70h24M92 58v24" stroke="#9a6834" stroke-width="3"/>
+<path d="M27 169q-18-14-12-27 21-1 24 26m-2 3q-1-24 17-29 12 14-10 30m104 0q-6-24 13-29 14 15-7 31" fill="#69923a" stroke="#43632c" stroke-width="3"/>
+<path d="M58 176q31-8 68-1" fill="none" stroke="#e1bd80" stroke-width="7" stroke-linecap="round"/>
+</svg>
