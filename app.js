@@ -1,16 +1,16 @@
 import {createGame,nextRoll,roll,select,advanceTurn,score,pause,resume} from './engine.mjs?v=20261031e';
 import {dieTransform,rollKeyframes} from './dice.mjs?v=20261031b';
-import {ForestAudio} from './audio.mjs?v=20261031e';
-import {HINT_DELAY,showFirstGuide,helpWords} from './guidance.mjs?v=20261031e';
+import {ForestAudio} from './audio.mjs?v=20261101a';
+import {HINT_DELAY,showFirstGuide,helpWords} from './guidance.mjs?v=20261101a';
 
 const $=id=>document.getElementById(id), settings={mode:'computer'};
 const patterns={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
-const forestAudio=new ForestAudio(), jobs=new Set();
+const forestAudio=new ForestAudio({onMusicState:state=>{const b=$('music-button');if(b){b.dataset.audioState=state;b.setAttribute('aria-busy',String(state==='loading'));}}}), jobs=new Set();
+forestAudio.preload().catch(()=>{});
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let game,dieValue=1,rolling=false,animation,autoPaused=false,run=0,hintCount=0;
 let musicOn=false;
-try {musicOn=localStorage.getItem('getallenbos-music')==='on';} catch {}
-forestAudio.setMusic(musicOn);
+
 const ai=()=>game?.mode==='computer'&&game.current===1;
 const scene=document.querySelector('.scene'), zone=document.querySelector('.dice-zone');
 
@@ -117,7 +117,7 @@ function start(){
   clear();game=createGame(settings);scene.classList.add('playing');
   $('menu').hidden=true;$('game').hidden=false;
   document.querySelectorAll('dialog[open]').forEach(d=>d.close());
-  document.body.classList.remove('paused');forestAudio.resume();
+  document.body.classList.remove('paused');forestAudio.unlock();musicOn=true;updateMusic(true);
   for(let p=0;p<2;p++){
     emotion(p,0);$('player-'+p).classList.remove('celebrate');$('cards-'+p).innerHTML='';
     for(let i=0;i<6;i++){
@@ -144,16 +144,19 @@ function throwDie(){
 }
 function transformCard(p,i,collect){
   const b=$('cards-'+p).children[i],img=b.querySelector('.magic');
+  if(collect)later(()=>forestAudio.cue('up'),reduced?20:200);else forestAudio.cue('back');
+  b.classList.remove('smoke-out');
   b.classList.add('transforming',collect?'collecting':'restoring');
   const sequence=collect?[1,2,3,4,5]:[5,4,3,2,1];
-  const frameDelay=reduced?45:190;
+  const frameDelay=reduced?45:(collect?190:170);
   sequence.forEach((frame,index)=>later(()=>{
     img.src=`assets/magic-${frame}.webp`;b.dataset.frame=String(frame);b.classList.add('magic-visible');
   },(collect?(reduced?20:200):0)+index*frameDelay));
+  if(!collect)later(()=>b.classList.add('smoke-out'),reduced?210:800);
   later(()=>{
-    b.classList.remove('transforming','collecting','restoring','magic-visible');
+    b.classList.remove('transforming','collecting','restoring','magic-visible','smoke-out');
     delete b.dataset.frame;render();
-  },reduced?300:1400);
+  },reduced?300:(collect?1400:1060));
 }
 function choose(p,i,computer=false){
   if(!game||p!==game.current||rolling||game.paused||ai()!==computer)return;
@@ -167,7 +170,6 @@ function choose(p,i,computer=false){
   }
   stopHints();silence();emotion(p,result.turnedDown?1:2);
   $('player-'+p).classList.toggle('celebrate',result.turnedDown);
-  forestAudio.cue(result.turnedDown?'up':'back');
   transformCard(p,i,result.turnedDown);render();
   later(()=>{
     $('player-'+p).classList.remove('celebrate');
@@ -178,25 +180,26 @@ function finish(){
   stopHints();render();const winner=game.winner,title=`${winner===0?'Eekhoorn':'Egel'} heeft gewonnen!`;
   [0,1].forEach(p=>emotion(p,winner===p?1:2));
   $('result-title').textContent=title;
-  $('result-players').innerHTML=[0,1].map(p=>`<div class="result-player ${winner===p?'winner':''}"><img src="assets/character-${p}-${winner===p?1:2}.webp" alt="${p===0?'Eekhoorn':'Egel'}"><b>${score(game,p)} <img class="result-acorn" src="assets/magic-5.webp" alt="eikels"></b></div>`).join('');
+  $('result').classList.toggle('winner-opposite',game.mode==='friend'&&winner===1);
+  $('result-players').innerHTML=`<div class="winner-stage"><div class="sunburst" aria-hidden="true"></div><span class="winner-stars" aria-hidden="true">✦ ★ ✦</span><img class="winner-portrait" src="assets/character-${winner}-1.webp" alt="${winner===0?'Eekhoorn':'Egel'} heeft gewonnen"><div class="winner-harvest" aria-label="Zes eikels">${Array.from({length:6},(_,i)=>`<img src="assets/magic-5.webp" alt="" style="--i:${i}">`).join('')}</div></div>`;
   $('result').showModal();forestAudio.cue('win');speak(title);
 }
 function home(){
   clear();game=null;scene.classList.remove('playing');
   document.querySelectorAll('dialog[open]').forEach(d=>d.close());
   document.body.classList.remove('paused');$('menu').hidden=false;$('game').hidden=true;
-  silence();forestAudio.resume();
+  silence();musicOn=false;updateMusic();forestAudio.resume();
 }
-function updateMusic(){
-  forestAudio.setMusic(musicOn);
+function updateMusic(restart=false){
+  forestAudio.setMusic(musicOn,{restart});
   $('music-button').setAttribute('aria-pressed',String(musicOn));
-  $('music-button').setAttribute('aria-label',musicOn?'Achtergrondmuziek uitzetten':'Zachte achtergrondmuziek aanzetten');
+  $('music-button').setAttribute('aria-label',musicOn?'Muziek stoppen':'Muziek vanaf de intro starten');
   $('music-button').classList.toggle('music-on',musicOn);
 }
 updateMusic();
 $('music-button').onclick=()=>{
   musicOn=!musicOn;forestAudio.unlock();updateMusic();
-  try{localStorage.setItem('getallenbos-music',musicOn?'on':'off');}catch{}
+
 };
 $('start').onclick=()=>{forestAudio.unlock();start();};
 $('roll').onclick=()=>{if(!ai())throwDie();};

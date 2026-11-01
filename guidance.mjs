@@ -1,4 +1,4 @@
-export const HINT_DELAY = 14000;
+export const HINT_DELAY = 8000;
 export function showFirstGuide(game) {
   return !(game.mode==='computer' && game.current===1)
     && game.players[game.current].turnsTaken===0

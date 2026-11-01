@@ -16,9 +16,9 @@ Dit is een begeleide speldobbelsteen. Alle worpen blijven mogelijk zolang het da
 
 ## Rustige begeleiding
 
-De eerste beurt van elke menselijke speler krijgt een visueel handje, zonder gesproken uitleg. Het handje wijst eerst naar de dobbelsteen en beweegt daarna naar de geworpen kaart. Vanaf de volgende beurt zoekt het kind zelf. Na 14 seconden wachten volgt een visuele en korte gesproken hint; 18 seconden later kan één concretere hint volgen. Daarna blijft het stil. De luidspreker geeft altijd hulp voor de huidige stap.
+De eerste beurt van elke menselijke speler krijgt een visueel handje, zonder gesproken uitleg. Het handje wijst eerst naar de dobbelsteen en beweegt daarna naar de geworpen kaart. Vanaf de volgende beurt zoekt het kind zelf. Na 8 seconden wachten volgt een visuele en korte gesproken hint; 18 seconden later kan één concretere hint volgen. Daarna blijft het stil. De luidspreker geeft altijd hulp voor de huidige stap.
 
-Korte, afwisselende geluidjes begeleiden de worp, het veranderen en de beurtwisseling. De zachte achtergrondmelodie is optioneel via het muzieknootje en staat standaard uit. Nederlandse spraak gebruikt de apparaatstem. Bij verlaten van de app of de vraag om terug te gaan, worden muziek en lopende spelacties onderbroken.
+De aangeleverde opnames begeleiden de dobbelsteen en het verschijnen en verdwijnen van de eikel. De muziek begint bij ieder nieuw spel met de intro. De loop start aansluitend op dezelfde Web Audio-klok en herhaalt zich. De muziekknop stopt beide muziekbronnen; opnieuw aanzetten begint weer bij de intro. Spelgeluiden blijven hoorbaar wanneer alleen de muziek uitstaat. Nederlandse spraak gebruikt de apparaatstem. Bij verlaten van de app of de vraag om terug te gaan, worden muziek en lopende spelacties onderbroken.
 
 ## Ontwikkeling
 
