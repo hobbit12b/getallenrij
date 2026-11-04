@@ -4,8 +4,8 @@ export function createGame({mode = 'computer'} = {}) {
   return {mode, players:[0,1].map(()=>({cards:Array(6).fill(false), turnsTaken:0})), current:0, phase:'roll', rolled:null, winner:null, paused:false, tiebreak:null};
 }
 export function score(game, player) { return game.players[player].cards.filter(Boolean).length; }
-/** Keep every outcome that still permits finishing within twelve own turns.
- * Setbacks remain possible late in the race, including on the tenth throw.
+/** First six throws are uniform. Thereafter favour progress without removing
+ * setbacks, while keeping completion possible within twelve own turns.
  * Both players use the same rule; no winner is selected in advance. */
 export function nextRoll(game, random = Math.random) {
   if (game.phase !== 'roll' || game.paused) throw new RangeError('Not ready to roll');
@@ -16,6 +16,16 @@ export function nextRoll(game, random = Math.random) {
   const missing = 6-score(game,game.current), turnsAfter = 12-p.turnsTaken-1;
   const choices = p.cards.flatMap((acorn,i)=>missing+(acorn?1:-1)<=turnsAfter?[i+1]:[]);
   if (!choices.length) throw new RangeError('No cards remain');
+  if (p.turnsTaken>=6) {
+    const setbacks=choices.filter(n=>p.cards[n-1]), progress=choices.filter(n=>!p.cards[n-1]);
+    // Uniform late throws made both players finish on turn twelve in almost
+    // every game. Favouring progress spreads finishes across turns 8, 10, 12.
+    if (setbacks.length && progress.length) {
+      const setbackChance=.15;
+      if (unit<setbackChance) return setbacks[Math.floor(unit/setbackChance*setbacks.length)];
+      return progress[Math.min(progress.length-1,Math.floor((unit-setbackChance)/(1-setbackChance)*progress.length))];
+    }
+  }
   return choices[Math.floor(unit * choices.length)];
 }
 export function roll(game, value) {

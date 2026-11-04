@@ -1,4 +1,4 @@
-import {createGame,nextRoll,roll,select,advanceTurn,score,pause,resume} from './engine.mjs?v=20261104b';
+import {createGame,nextRoll,roll,select,advanceTurn,score,pause,resume} from './engine.mjs?v=20261104c';
 import {dieTransform,rollKeyframes} from './dice.mjs?v=20261104b';
 import {ForestAudio} from './audio.mjs?v=20261101a';
 import {HINT_DELAY,showFirstGuide,helpWords} from './guidance.mjs?v=20261104b';

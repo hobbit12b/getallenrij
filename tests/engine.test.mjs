@@ -52,8 +52,8 @@ test('the leader after six own turns can still lose',()=>{
  }
  assert.equal(g.winner,1);assert.equal(g.players[1].turnsTaken,10);
 });
-test('20000 seeded games give each player about half the wins, with at most twelve card turns',()=>{
- const wins=[0,0];
+test('20000 seeded games have fair winners, varied finishing rounds and at most twelve card turns',()=>{
+ const wins=[0,0],rounds=new Set();let tiebreaks=0;
  for(let seed=1;seed<=20000;seed++){
   let state=seed;const rng=()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296;};
   const g=createGame({mode:seed%2?'computer':'friend'});
@@ -63,9 +63,19 @@ test('20000 seeded games give each player about half the wins, with at most twel
   }
   assert.equal(g.phase,'ended');const winner=g.players[g.winner];assert.ok(winner.turnsTaken>=6&&winner.turnsTaken<=12);
   assert.equal(g.players[0].turnsTaken,g.players[1].turnsTaken);
+  if(g.tiebreak)tiebreaks++;
+  rounds.add(winner.turnsTaken);
   assert.equal(score(g,g.winner),6);wins[g.winner]++;
  }
  assert.ok(Math.abs(wins[0]/20000-.5)<.012,`Observed wins: ${wins}`);
+ assert.ok(tiebreaks/20000<.4,`Too many simultaneous finishes: ${tiebreaks}`);
+ assert.deepEqual([...rounds].sort((a,b)=>a-b),[6,8,10,12]);
+});
+test('later turns favour missing numbers but retain a fifteen percent setback chance when possible',()=>{
+ const g=createGame();g.players[0]={turnsTaken:6,cards:[true,true,true,true,false,false]};
+ let setbacks=0;
+ for(let i=0;i<10000;i++)if(nextRoll(g,()=>i/10000)<=4)setbacks++;
+ assert.equal(setbacks,1500);
 });
 
 function tiedGame(){
