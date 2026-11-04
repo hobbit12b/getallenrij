@@ -1,7 +1,7 @@
-import {createGame,nextRoll,roll,select,advanceTurn,score,pause,resume} from './engine.mjs?v=20261031e';
-import {dieTransform,rollKeyframes} from './dice.mjs?v=20261031b';
+import {createGame,nextRoll,roll,select,advanceTurn,score,pause,resume} from './engine.mjs?v=20261104b';
+import {dieTransform,rollKeyframes} from './dice.mjs?v=20261104b';
 import {ForestAudio} from './audio.mjs?v=20261101a';
-import {HINT_DELAY,showFirstGuide,helpWords} from './guidance.mjs?v=20261101a';
+import {HINT_DELAY,showFirstGuide,helpWords} from './guidance.mjs?v=20261104b';
 
 const $=id=>document.getElementById(id), settings={mode:'computer'};
 const patterns={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
@@ -10,21 +10,41 @@ forestAudio.preload().catch(()=>{});
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let game,dieValue=1,rolling=false,animation,autoPaused=false,run=0,hintCount=0;
 let musicOn=false;
+let introTimer,introStep=0,introRun=0;
 
 const ai=()=>game?.mode==='computer'&&game.current===1;
 const scene=document.querySelector('.scene'), zone=document.querySelector('.dice-zone');
 
-function speak(words) {
+function speak(words,onDone) {
   $('announcement').textContent=words;
   if(!('speechSynthesis' in window))return;
   try {
     speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(words);
     u.lang='nl-NL';u.rate=.86;
     const voice=speechSynthesis.getVoices().find(v=>v.lang.startsWith('nl'));
-    if(voice)u.voice=voice;speechSynthesis.speak(u);
+    if(voice)u.voice=voice;if(onDone){u.onend=onDone;u.onerror=onDone;}speechSynthesis.speak(u);
   } catch {}
 }
 function silence(){try{speechSynthesis.cancel();}catch{}}
+const introWords=[
+  'Verzamel zes eikels om te winnen!',
+  'Gooi de dobbelsteen. Tik op de kaart met evenveel stippen. Die wordt een eikel.',
+  'Ligt er al een eikel? Dan wordt het weer een kaart. Speel om de beurt.'
+];
+function explain(step){
+  clearTimeout(introTimer);const token=++introRun;introStep=step;
+  $('intro').dataset.step=String(step);
+  document.querySelectorAll('.intro-panel').forEach((panel,i)=>panel.hidden=i!==step);
+  document.querySelectorAll('.intro-dot').forEach((dot,i)=>dot.classList.toggle('current',i===step));
+  $('intro-next').setAttribute('aria-label',step===2?'Spelen':'Volgende stap');
+  const next=()=>{if(token===introRun&&$('intro').open&&!document.hidden)nextExplanation();};
+  // A fallback also progresses the visual explanation if a device has no voice.
+  introTimer=setTimeout(next,[5000,12000,12000][step]);
+  speak(introWords[step],()=>{if(token!==introRun)return;clearTimeout(introTimer);introTimer=setTimeout(next,1000);});
+}
+function stopExplanation(){++introRun;clearTimeout(introTimer);silence();if($('intro').open)$('intro').close();}
+function nextExplanation(){if(introStep<2)explain(introStep+1);else{stopExplanation();start();}}
+function explainGame(){forestAudio.unlock();musicOn=false;updateMusic();$('intro').showModal();explain(0);}
 function later(fn,ms,kind='game') {
   const j={fn,ms,end:Date.now()+ms,id:null,run,kind};
   j.go=()=>{jobs.delete(j);if(j.run===run&&game&&!game.paused)fn();};
@@ -91,10 +111,15 @@ document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('[data-mode]').forEach(x=>{x.classList.toggle('selected',x===b);x.setAttribute('aria-pressed',String(x===b));});
 });
 function render(){
+  document.querySelectorAll('.tie-note').forEach(note=>note.hidden=!game.tiebreak||game.phase==='ended');
   for(let p=0;p<2;p++){
     const active=game.current===p&&game.phase!=='ended';
     $('player-'+p).classList.toggle('active',active);
     $('status-'+p).textContent=`${p===0?'Eekhoorn':'Egel'}: ${score(game,p)} eikels`;
+    const result=$('tie-throw-'+p),value=game.tiebreak?.values[p];
+    result.hidden=!value || (rolling&&game.current===p);
+    result.setAttribute('aria-label',`Extra worp: ${value??0}`);
+    if(value)result.innerHTML=Array.from({length:9},(_,i)=>`<i class="pip ${patterns[value].includes(i)?'':'empty'}"></i>`).join('');
     Array.from($('cards-'+p).children).forEach((b,i)=>{
       if(!b.classList.contains('transforming')){
         b.classList.toggle('collected',game.players[p].cards[i]);
@@ -110,10 +135,13 @@ function ready(){
   render();if(game.phase==='ended')return;
   emotion(game.current,0);zone.style.top=game.current===0?'57%':'43%';
   $('announcement').textContent=`${game.current===0?'Eekhoorn':'Egel'} is aan de beurt.`;
-  if(ai()){stopHints();later(throwDie,1500);}
+  if(game.tiebreak&&game.current===0)speak(game.tiebreak.round===1?'Gelijkspel! Gooi allebei. Wie het meeste gooit, wint het spel!':'Evenveel! Gooi allebei nog een keer.');
+  else if(!game.tiebreak&&game.current===1&&score(game,0)===6)speak('Eekhoorn heeft zes eikels. Egel mag nog één keer!');
+  if(ai()){stopHints();later(throwDie,!game.tiebreak&&score(game,0)===6?4500:1500);}
   else{forestAudio.cue('turn');armHint();}
 }
 function start(){
+  stopExplanation();
   clear();game=createGame(settings);scene.classList.add('playing');
   $('menu').hidden=true;$('game').hidden=false;
   document.querySelectorAll('dialog[open]').forEach(d=>d.close());
@@ -134,12 +162,14 @@ function throwDie(){
   forestAudio.unlock();const first=showFirstGuide(game);
   stopHints(!first);const n=nextRoll(game,randomUnit);if(!roll(game,n).ok)return;
   rolling=true;render();silence();forestAudio.cue('roll');
-  zone.classList.add('rolling');zone.style.top=game.current===0?'43%':'57%';
+  zone.classList.add('rolling');zone.style.top=game.current===0?'57%':'43%';
   animation=$('die').animate(rollKeyframes(dieValue,n),{duration:reduced?10:1250,easing:'cubic-bezier(.2,.7,.3,1)',fill:'forwards'});
   later(()=>{
     showDie(n);rolling=false;zone.classList.remove('rolling');render();
     $('announcement').textContent=`Gegooid: ${n}.`;
-    if(ai())later(()=>choose(1,n-1,true),1600);else armHint();
+    if(game.tiebreak){
+      later(()=>{if(game.phase==='ended')finish();else{advanceTurn(game);ready();}},2000);
+    }else if(ai())later(()=>choose(1,n-1,true),1600);else armHint();
   },reduced?50:1300);
 }
 function transformCard(p,i,collect){
@@ -201,7 +231,11 @@ $('music-button').onclick=()=>{
   musicOn=!musicOn;forestAudio.unlock();updateMusic();
 
 };
-$('start').onclick=()=>{forestAudio.unlock();start();};
+$('start').onclick=explainGame;
+$('intro-next').onclick=nextExplanation;
+$('intro-skip').onclick=()=>{stopExplanation();start();};
+$('intro-repeat').onclick=()=>explain(introStep);
+$('intro').oncancel=e=>{e.preventDefault();stopExplanation();start();};
 $('roll').onclick=()=>{if(!ai())throwDie();};
 $('repeat-button').onclick=()=>{forestAudio.unlock();if(game){speak(helpWords(game));if(!ai()&&!rolling&&['roll','choose'].includes(game.phase)){armHint(false);guide(false);}}};
 $('home-button').onclick=()=>{freeze();$('leave').showModal();};
@@ -210,6 +244,7 @@ $('quit').onclick=home;$('again').onclick=start;$('result-home').onclick=home;
 $('leave').oncancel=e=>{e.preventDefault();$('leave').close();thaw();};
 $('result').oncancel=e=>e.preventDefault();
 document.addEventListener('visibilitychange',()=>{
+  if($('intro').open){if(document.hidden){++introRun;clearTimeout(introTimer);silence();}else explain(introStep);}
   if(document.hidden){forestAudio.suspend();if(game&&!game.paused){freeze();autoPaused=true;}}
   else {if(autoPaused){autoPaused=false;if(!$('leave').open)thaw();}else if(!$('leave').open)forestAudio.resume();}
 });

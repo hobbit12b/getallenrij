@@ -33,15 +33,15 @@ test('every rolled face lands on physical top, with its opposite underneath', ()
   }
 });
 
-test('overhead camera makes every result the clearly dominant visible face', () => {
+test('straight overhead camera shows exactly the result and no side face', () => {
   for (let value = 1; value <= 6; value++) {
     const css = rotationsFromCss(dieTransform(value));
     const topNormal = applyCss(normals[value], css);
-    assert.ok(topNormal[2] > 0.90, `Result ${value} must retain at least 90% projected area toward the viewer`);
+    nearVector(topNormal,[0,0,1]);
     for (let other = 1; other <= 6; other++) {
       if (other !== value) {
         const normal = applyCss(normals[other], css);
-        assert.ok(normal[2] < 0.40, `Side ${other} must not compete with result ${value}`);
+        assert.ok(normal[2] < 1e-10, `Side ${other} must have no visible projected area`);
       }
     }
   }
@@ -57,8 +57,8 @@ test('whole animation spins do not change the final face', () => {
 });
 
 test('CSS transform remains a predictable four-rotation animation sequence', () => {
-  assert.equal(dieTransform(1), 'rotateX(-65deg) rotateY(-24deg) rotateX(90deg) rotateY(0deg)');
-  assert.equal(dieTransform(4, 3), 'rotateX(-65deg) rotateY(-24deg) rotateX(1260deg) rotateY(2160deg)');
+  assert.equal(dieTransform(1), 'rotateX(-90deg) rotateY(0deg) rotateX(90deg) rotateY(0deg)');
+  assert.equal(dieTransform(4, 3), 'rotateX(-90deg) rotateY(0deg) rotateX(1260deg) rotateY(2160deg)');
   for (let value = 1; value <= 6; value++) {
     assert.equal(rotationsFromCss(dieTransform(value)).length, 4);
   }

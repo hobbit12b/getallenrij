@@ -12,8 +12,10 @@ test('repeating a number changes an acorn back to its numbered card',()=>{
  const g=createGame();play(g,5);advanceTurn(g);play(g,1);advanceTurn(g);
  assert.equal(play(g,5).turnedDown,false);assert.equal(score(g,0),0);assert.equal(g.players[0].turnsTaken,2);
 });
-test('six different throws finish the race and stop all further input',()=>{
+test('the starter must let the other player complete the round before winning',()=>{
  const g=createGame();for(let n=1;n<=6;n++){play(g,n);if(n<6){advanceTurn(g);play(g,1);advanceTurn(g);}}
+ assert.equal(g.winner,null);assert.equal(g.phase,'between');
+ advanceTurn(g);play(g,1);
  assert.equal(g.winner,0);assert.equal(g.phase,'ended');assert.equal(score(g,0),6);
  assert.equal(advanceTurn(g).ok,false);assert.equal(roll(g,1).ok,false);
 });
@@ -50,16 +52,56 @@ test('the leader after six own turns can still lose',()=>{
  }
  assert.equal(g.winner,1);assert.equal(g.players[1].turnsTaken,10);
 });
-test('2000 seeded games with both player modes finish in 6–12 own turns',()=>{
+test('20000 seeded games give each player about half the wins, with at most twelve card turns',()=>{
  const wins=[0,0];
- for(let seed=1;seed<=2000;seed++){
+ for(let seed=1;seed<=20000;seed++){
   let state=seed;const rng=()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296;};
   const g=createGame({mode:seed%2?'computer':'friend'});
-  for(let steps=0;steps<24&&g.phase!=='ended';steps++){play(g,nextRoll(g,rng));if(g.phase!=='ended')advanceTurn(g);}
+  for(let steps=0;steps<100&&g.phase!=='ended';steps++){
+   const n=nextRoll(g,rng);if(g.tiebreak)roll(g,n);else play(g,n);
+   if(g.phase!=='ended')advanceTurn(g);
+  }
   assert.equal(g.phase,'ended');const winner=g.players[g.winner];assert.ok(winner.turnsTaken>=6&&winner.turnsTaken<=12);
+  assert.equal(g.players[0].turnsTaken,g.players[1].turnsTaken);
   assert.equal(score(g,g.winner),6);wins[g.winner]++;
  }
- assert.ok(wins[0]>100&&wins[1]>100);
+ assert.ok(Math.abs(wins[0]/20000-.5)<.012,`Observed wins: ${wins}`);
+});
+
+function tiedGame(){
+ const g=createGame({mode:'friend'});
+ for(let n=1;n<=6;n++)for(let p=0;p<2;p++){play(g,n);advanceTurn(g);}
+ return g;
+}
+test('equal finishing rounds give a fair extra throw, with equal rolls replayed',()=>{
+ const wins=[0,0];let ties=0;
+ for(let a=1;a<=6;a++)for(let b=1;b<=6;b++){
+  const g=tiedGame();assert.ok(g.tiebreak);assert.equal(g.winner,null);
+  assert.deepEqual(Array.from({length:6},(_,i)=>nextRoll(g,()=>i/6)),[1,2,3,4,5,6]);
+  roll(g,a);assert.equal(g.phase,'between');assert.equal(select(g,a-1).ok,false);
+  advanceTurn(g);roll(g,b);
+  assert.deepEqual(g.tiebreak.values,[a,b]);
+  if(a===b){
+   ties++;assert.equal(g.winner,null);advanceTurn(g);
+   assert.deepEqual(g.tiebreak.values,[null,null]);assert.equal(g.tiebreak.round,2);
+  }else{assert.equal(g.phase,'ended');wins[g.winner]++;assert.equal(g.winner,a>b?0:1);}
+  assert.deepEqual(g.players.map(p=>p.turnsTaken),[6,6]);
+  assert.deepEqual(g.players.map((_,p)=>score(g,p)),[6,6]);
+ }
+ assert.deepEqual(wins,[15,15]);assert.equal(ties,6);
+});
+test('the second player can win outright in the same number of card turns',()=>{
+ const g=createGame();
+ for(let n=1;n<=6;n++){
+  play(g,1);advanceTurn(g);play(g,n);if(g.phase!=='ended')advanceTurn(g);
+ }
+ assert.equal(g.winner,1);assert.deepEqual(g.players.map(p=>p.turnsTaken),[6,6]);
+});
+test('pausing and duplicate taps cannot consume an extra tie-break throw',()=>{
+ const g=tiedGame();pause(g);assert.equal(roll(g,6).ok,false);resume(g);
+ roll(g,6);assert.equal(roll(g,1).ok,false);pause(g);assert.equal(advanceTurn(g).ok,false);
+ resume(g);advanceTurn(g);roll(g,1);assert.equal(g.winner,0);
+ assert.equal(roll(g,6).ok,false);assert.equal(advanceTurn(g).ok,false);
 });
 test('pause preserves a pending selection and pending end-of-game presentation',()=>{
  const g=createGame();roll(g,4);pause(g);assert.equal(select(g,3).ok,false);resume(g);assert.equal(select(g,3).ok,true);

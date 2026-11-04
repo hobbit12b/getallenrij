@@ -19,7 +19,7 @@ export function dieTransform(value, spins = 0) {
     throw new RangeError('Spins must be a non-negative integer');
   }
   const [x, y] = faceRotations[value];
-  return `rotateX(-65deg) rotateY(-24deg) rotateX(${x + spins * 360}deg) rotateY(${y + spins * 720}deg)`;
+  return `rotateX(-90deg) rotateY(0deg) rotateX(${x + spins * 360}deg) rotateY(${y + spins * 720}deg)`;
 }
 
 /** Keep both endpoints as matching rotation functions: matrix interpolation loses full turns. */

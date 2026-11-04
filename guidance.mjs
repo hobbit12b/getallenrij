@@ -7,6 +7,7 @@ export function showFirstGuide(game) {
 export function helpWords(game, explicit = true) {
   if(game.phase==='ended') return 'Nog een keer spelen?';
   if(game.mode==='computer' && game.current===1) return 'Egel is aan de beurt.';
+  if(game.tiebreak) return 'Gooi de dobbelsteen. Wie het meeste gooit, wint het spel!';
   if(game.phase==='roll') return 'Tik op de dobbelsteen.';
   if(game.phase==='choose') return explicit ? `Waar ligt de ${game.rolled}?` : 'Tel de stippen. Kijk naar je rij.';
   return 'Nu is de ander aan de beurt.';
