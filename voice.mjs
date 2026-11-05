@@ -22,7 +22,7 @@ export const VOICE_FILES={
 };
 
 export class RecordedVoice {
-  constructor(getContext,fetcher=fetch){this.getContext=getContext;this.fetcher=fetcher;this.cache=new Map();this.generation=0;this.source=null;}
+  constructor(getContext,fetcher=(url)=>fetch(url)){this.getContext=getContext;this.fetcher=fetcher;this.cache=new Map();this.generation=0;this.source=null;}
   stop(){this.generation++;if(this.source){this.source.onended=null;try{this.source.stop();}catch{}this.source.disconnect();this.source=null;}}
   async play(words,{onStart,onEnd,onError}={}){
     this.stop();const token=this.generation;

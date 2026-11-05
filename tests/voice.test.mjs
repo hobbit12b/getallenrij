@@ -2,6 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {RecordedVoice,VOICE_FILES} from '../voice.mjs';
+test('native browser fetch is called without a RecordedVoice receiver',async()=>{
+ const original=globalThis.fetch;let started=false,error;
+ globalThis.fetch=async function(){if(this!==undefined&&this!==globalThis)throw new TypeError('Illegal invocation');return {ok:true,arrayBuffer:async()=>new ArrayBuffer(1)};};
+ try{
+  const context={decodeAudioData:async()=>({}),destination:{},createBufferSource:()=>({connect(){},start(){started=true;}})};
+  await new RecordedVoice(()=>context).play('Tik op de dobbelsteen.',{onError:e=>error=e});
+  assert.equal(error,undefined);assert.equal(started,true);
+ }finally{globalThis.fetch=original;}
+});
 test('all literal spoken app lines map to a recording, with no synthetic fallback',()=>{
  const app=fs.readFileSync(new URL('../app.js',import.meta.url),'utf8');
  const lines=[...app.matchAll(/speak\('([^']+)'/g)].map(m=>m[1]);

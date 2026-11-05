@@ -1,4 +1,4 @@
-import {RecordedVoice} from './voice.mjs?v=20261105c';
+import {RecordedVoice} from './voice.mjs?v=20261105d';
 import {createGame,nextRoll,roll,select,advanceTurn,score,pause,resume} from './engine.mjs?v=20261105a';
 import {dieTransform,rollKeyframes} from './dice.mjs?v=20261104b';
 import {ForestAudio} from './audio.mjs?v=20261101a';
