@@ -1,3 +1,4 @@
+import {RecordedVoice} from './voice.mjs?v=20261105b';
 import {createGame,nextRoll,roll,select,advanceTurn,score,pause,resume} from './engine.mjs?v=20261105a';
 import {dieTransform,rollKeyframes} from './dice.mjs?v=20261104b';
 import {ForestAudio} from './audio.mjs?v=20261101a';
@@ -7,6 +8,7 @@ const $=id=>document.getElementById(id), settings={mode:'computer'};
 const patterns={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
 const forestAudio=new ForestAudio({onMusicState:state=>{const b=$('music-button');if(b){b.dataset.audioState=state;b.setAttribute('aria-busy',String(state==='loading'));}}}), jobs=new Set();
 forestAudio.preload().catch(()=>{});
+const recordedVoice=new RecordedVoice(()=>forestAudio.context);
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let game,dieValue=1,rolling=false,animation,autoPaused=false,run=0,hintCount=0;
 let musicOn=false;
@@ -19,15 +21,18 @@ const scene=document.querySelector('.scene'), zone=document.querySelector('.dice
 
 function speak(words,onDone) {
   $('announcement').textContent=words;
-  if(!('speechSynthesis' in window))return;
-  try {
-    speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(words);
-    u.lang='nl-NL';u.rate=.86;
-    const voice=speechSynthesis.getVoices().find(v=>v.lang.startsWith('nl'));
-    if(voice)u.voice=voice;if(onDone)u.onend=onDone;speechSynthesis.speak(u);
-  } catch {}
+  forestAudio.unlock();
+  try{speechSynthesis.cancel();}catch{}
+  recordedVoice.play(words,{
+    onStart:()=>{if($('intro').open)clearTimeout(introTimer);if($('tie-intro').open)clearTieJobs();},
+    onEnd:onDone,
+    onError:()=>{
+      if(!('speechSynthesis' in window)){onDone?.();return;}
+      try{const u=new SpeechSynthesisUtterance(words);u.lang='nl-NL';u.rate=.86;u.onend=onDone;u.onerror=onDone;speechSynthesis.speak(u);}catch{onDone?.();}
+    }
+  });
 }
-function silence(){try{speechSynthesis.cancel();}catch{}}
+function silence(){recordedVoice.stop();try{speechSynthesis.cancel();}catch{}}
 const introWords=[
   'Verzamel zes eikels om te winnen!',
   'Gooi de dobbelsteen. Tik op de kaart met evenveel stippen. Die wordt een eikel.',
@@ -72,6 +77,7 @@ function thaw() {
   resume(game);
   for(const j of jobs){j.end=Date.now()+j.ms;j.id=setTimeout(j.go,j.ms);}
   animation?.play();document.body.classList.remove('paused');forestAudio.resume();render();
+  if(ai()&&game.phase==='roll'&&![...jobs].some(j=>j.kind==='game'))ready();
 }
 function guide(exact=false) {
   if(!game||ai()||!['roll','choose'].includes(game.phase))return;
@@ -138,7 +144,10 @@ function ready(){
   $('announcement').textContent=`${game.current===0?'Eekhoorn':'Egel'} is aan de beurt.`;
   if(game.tiebreak&&!tieExplained){explainTie();return;}
   if(game.tiebreak&&game.current===0&&game.tiebreak.round>1)speak('Evenveel! Gooi allebei nog een keer.');
-  else if(!game.tiebreak&&game.current===1&&score(game,0)===6)speak('Eekhoorn heeft zes eikels. Egel mag nog één keer!');
+  else if(!game.tiebreak&&game.current===1&&score(game,0)===6){
+    speak('Eekhoorn heeft zes eikels. Egel mag nog één keer!',ai()?()=>later(throwDie,500):undefined);
+    if(ai()){stopHints();return;}
+  }
   if(ai()){stopHints();later(throwDie,!game.tiebreak&&score(game,0)===6?4500:1500);}
   else{forestAudio.cue('turn');armHint();}
 }

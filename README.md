@@ -28,7 +28,7 @@ Bij gelijkspel verschijnt een uitleg zonder leestekst: twee dobbelstenen met een
 
 De eerste beurt van elke menselijke speler krijgt een visueel handje, zonder gesproken uitleg. Het handje wijst eerst naar de dobbelsteen en beweegt daarna naar de geworpen kaart. Vanaf de volgende beurt zoekt het kind zelf. Na 8 seconden wachten volgt een visuele en korte gesproken hint; 18 seconden later kan één concretere hint volgen. Daarna blijft het stil. De luidspreker geeft altijd hulp voor de huidige stap.
 
-De aangeleverde opnames begeleiden de dobbelsteen en het verschijnen en verdwijnen van de eikel. De muziek begint bij ieder nieuw spel met de intro. De loop start aansluitend op dezelfde Web Audio-klok en herhaalt zich. De muziekknop stopt beide muziekbronnen; opnieuw aanzetten begint weer bij de intro. Spelgeluiden blijven hoorbaar wanneer alleen de muziek uitstaat. Nederlandse spraak gebruikt de apparaatstem. Bij verlaten van de app of de vraag om terug te gaan, worden muziek en lopende spelacties onderbroken.
+De aangeleverde opnames begeleiden de dobbelsteen en het verschijnen en verdwijnen van de eikel. De muziek begint bij ieder nieuw spel met de intro. De loop start aansluitend op dezelfde Web Audio-klok en herhaalt zich. De muziekknop stopt beide muziekbronnen; opnieuw aanzetten begint weer bij de intro. Spelgeluiden blijven hoorbaar wanneer alleen de muziek uitstaat. Gesproken uitleg en hints gebruiken de twintig aangeleverde opnames in `assets/voice`. De uitleg wacht op het einde van de opname. Alleen bij een laadfout wordt de Nederlandse apparaatstem gebruikt. Bij verlaten van de app of de vraag om terug te gaan, worden muziek en lopende spelacties onderbroken.
 
 ## Ontwikkeling
 

@@ -46,4 +46,4 @@ Beide spelers krijgen evenveel kaartbeurten. Als beide spelers in dezelfde ronde
 | winnaar_eekhoorn.mp3 | Eekhoorn heeft gewonnen! |
 | winnaar_egel.mp3 | Egel heeft gewonnen! |
 
-Totaal: 20 opnames. De huidige versie gebruikt hiervoor nog de Nederlandse apparaatstem. De opgenomen bestanden kunnen die vervangen zodra ze beschikbaar zijn. Dobbelsteen-, eikel- en muziekgeluiden blijven aparte bestanden.
+Totaal: 20 opnames. De twintig eigen opnames zijn opgenomen in assets/voice en worden door het spel afgespeeld. Alleen als een opname niet geladen kan worden, gebruikt het spel de Nederlandse apparaatstem als terugval. Dobbelsteen-, eikel- en muziekgeluiden blijven aparte bestanden.
