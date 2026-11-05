@@ -1,4 +1,4 @@
-import {createGame,nextRoll,roll,select,advanceTurn,score,pause,resume} from './engine.mjs?v=20261104c';
+import {createGame,nextRoll,roll,select,advanceTurn,score,pause,resume} from './engine.mjs?v=20261105a';
 import {dieTransform,rollKeyframes} from './dice.mjs?v=20261104b';
 import {ForestAudio} from './audio.mjs?v=20261101a';
 import {HINT_DELAY,showFirstGuide,helpWords} from './guidance.mjs?v=20261104b';
@@ -11,6 +11,8 @@ const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let game,dieValue=1,rolling=false,animation,autoPaused=false,run=0,hintCount=0;
 let musicOn=false;
 let introTimer,introStep=0,introRun=0;
+let tieExplained=false,tieLessonRun=0;
+const tieWords='Gelijkspel! Gooi allebei. Wie het meeste gooit, wint het spel!';
 
 const ai=()=>game?.mode==='computer'&&game.current===1;
 const scene=document.querySelector('.scene'), zone=document.querySelector('.dice-zone');
@@ -22,7 +24,7 @@ function speak(words,onDone) {
     speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(words);
     u.lang='nl-NL';u.rate=.86;
     const voice=speechSynthesis.getVoices().find(v=>v.lang.startsWith('nl'));
-    if(voice)u.voice=voice;if(onDone){u.onend=onDone;u.onerror=onDone;}speechSynthesis.speak(u);
+    if(voice)u.voice=voice;if(onDone)u.onend=onDone;speechSynthesis.speak(u);
   } catch {}
 }
 function silence(){try{speechSynthesis.cancel();}catch{}}
@@ -55,7 +57,7 @@ function stopHints(hide=true) {
   if(hide)$('guide').hidden=true;
 }
 function clear() {
-  run++;for(const j of jobs)clearTimeout(j.id);jobs.clear();
+  run++;tieLessonRun++;for(const j of jobs)clearTimeout(j.id);jobs.clear();
   animation?.cancel();animation=null;rolling=false;
   zone.classList.remove('rolling');$('guide').hidden=true;
 }
@@ -111,7 +113,6 @@ document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('[data-mode]').forEach(x=>{x.classList.toggle('selected',x===b);x.setAttribute('aria-pressed',String(x===b));});
 });
 function render(){
-  document.querySelectorAll('.tie-note').forEach(note=>note.hidden=!game.tiebreak||game.phase==='ended');
   for(let p=0;p<2;p++){
     const active=game.current===p&&game.phase!=='ended';
     $('player-'+p).classList.toggle('active',active);
@@ -135,14 +136,32 @@ function ready(){
   render();if(game.phase==='ended')return;
   emotion(game.current,0);zone.style.top=game.current===0?'57%':'43%';
   $('announcement').textContent=`${game.current===0?'Eekhoorn':'Egel'} is aan de beurt.`;
-  if(game.tiebreak&&game.current===0)speak(game.tiebreak.round===1?'Gelijkspel! Gooi allebei. Wie het meeste gooit, wint het spel!':'Evenveel! Gooi allebei nog een keer.');
+  if(game.tiebreak&&!tieExplained){explainTie();return;}
+  if(game.tiebreak&&game.current===0&&game.tiebreak.round>1)speak('Evenveel! Gooi allebei nog een keer.');
   else if(!game.tiebreak&&game.current===1&&score(game,0)===6)speak('Eekhoorn heeft zes eikels. Egel mag nog één keer!');
   if(ai()){stopHints();later(throwDie,!game.tiebreak&&score(game,0)===6?4500:1500);}
   else{forestAudio.cue('turn');armHint();}
 }
+function clearTieJobs(){
+  for(const j of jobs)if(j.kind==='tie-intro'){clearTimeout(j.id);jobs.delete(j);}
+}
+function explainTie(){
+  clearTieJobs();stopHints();const token=++tieLessonRun;
+  if(!$('tie-intro').open)$('tie-intro').showModal();
+  // Keep the first extra throw from cutting off the spoken explanation.
+  later(beginTieRound,9000,'tie-intro');
+  speak(tieWords,()=>{
+    if(token!==tieLessonRun||!$('tie-intro').open||game?.paused)return;
+    clearTieJobs();later(beginTieRound,600,'tie-intro');
+  });
+}
+function beginTieRound(){
+  if(!game||game.paused||!$('tie-intro').open)return;
+  ++tieLessonRun;clearTieJobs();$('tie-intro').close();silence();tieExplained=true;ready();
+}
 function start(){
   stopExplanation();
-  clear();game=createGame(settings);scene.classList.add('playing');
+  clear();tieExplained=false;game=createGame(settings);scene.classList.add('playing');
   $('menu').hidden=true;$('game').hidden=false;
   document.querySelectorAll('dialog[open]').forEach(d=>d.close());
   document.body.classList.remove('paused');forestAudio.unlock();musicOn=true;updateMusic(true);
@@ -168,7 +187,7 @@ function throwDie(){
     showDie(n);rolling=false;zone.classList.remove('rolling');render();
     $('announcement').textContent=`Gegooid: ${n}.`;
     if(game.tiebreak){
-      later(()=>{if(game.phase==='ended')finish();else{advanceTurn(game);ready();}},2000);
+      later(()=>{if(game.phase==='ended')finish();else{advanceTurn(game,randomUnit);ready();}},2000);
     }else if(ai())later(()=>choose(1,n-1,true),1600);else armHint();
   },reduced?50:1300);
 }
@@ -203,7 +222,7 @@ function choose(p,i,computer=false){
   transformCard(p,i,result.turnedDown);render();
   later(()=>{
     $('player-'+p).classList.remove('celebrate');
-    if(result.finished)finish();else{advanceTurn(game);ready();}
+    if(result.finished)finish();else{advanceTurn(game,randomUnit);ready();}
   },reduced?550:1850);
 }
 function finish(){
@@ -236,6 +255,9 @@ $('intro-next').onclick=nextExplanation;
 $('intro-skip').onclick=()=>{stopExplanation();start();};
 $('intro-repeat').onclick=()=>explain(introStep);
 $('intro').oncancel=e=>{e.preventDefault();stopExplanation();start();};
+$('tie-start').onclick=beginTieRound;
+$('tie-repeat').onclick=explainTie;
+$('tie-intro').oncancel=e=>{e.preventDefault();beginTieRound();};
 $('roll').onclick=()=>{if(!ai())throwDie();};
 $('repeat-button').onclick=()=>{forestAudio.unlock();if(game){speak(helpWords(game));if(!ai()&&!rolling&&['roll','choose'].includes(game.phase)){armHint(false);guide(false);}}};
 $('home-button').onclick=()=>{freeze();$('leave').showModal();};
@@ -246,7 +268,7 @@ $('result').oncancel=e=>e.preventDefault();
 document.addEventListener('visibilitychange',()=>{
   if($('intro').open){if(document.hidden){++introRun;clearTimeout(introTimer);silence();}else explain(introStep);}
   if(document.hidden){forestAudio.suspend();if(game&&!game.paused){freeze();autoPaused=true;}}
-  else {if(autoPaused){autoPaused=false;if(!$('leave').open)thaw();}else if(!$('leave').open)forestAudio.resume();}
+  else {if(autoPaused){autoPaused=false;if(!$('leave').open){thaw();if($('tie-intro').open)explainTie();}}else if(!$('leave').open)forestAudio.resume();}
 });
 window.addEventListener('resize',()=>{if(game&&!$('guide').hidden)guide(showFirstGuide(game));});
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});

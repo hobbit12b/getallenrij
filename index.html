@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#304f1e">
 <title>Getallenrij</title><link rel="apple-touch-icon" href="assets/apple-icon.png">
-<link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="style.css?v=20261104b">
+<link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="style.css?v=20261105a">
 </head>
 <body>
 <svg class="defs" aria-hidden="true"><defs>
@@ -25,7 +25,6 @@
 <button id="start" class="wood start" aria-label="Spelen"><svg><use href="#play"/></svg></button>
 </section>
 <section id="game" hidden>
-<p class="tie-note top" hidden>Hoogste worp wint!</p><p class="tie-note bottom" hidden>Hoogste worp wint!</p>
 <section class="player opposite" id="player-1"><div class="cards" id="cards-1"></div><img class="character" id="character-1" src="assets/character-1-0.webp" alt="Egel"><span id="tie-throw-1" class="tie-throw" role="img" hidden></span><span class="sr" id="status-1"></span></section>
 <section class="player" id="player-0"><div class="cards" id="cards-0"></div><img class="character" id="character-0" src="assets/character-0-0.webp" alt="Eekhoorn"><span id="tie-throw-0" class="tie-throw" role="img" hidden></span><span class="sr" id="status-0"></span></section>
 <div class="dice-zone"><div class="shadow"></div><div class="motion"><div id="die" role="img" aria-label="Dobbelsteen"></div></div><button id="roll" aria-label="Dobbelsteen gooien"></button></div>
@@ -57,7 +56,15 @@
 <div class="intro-dots" aria-hidden="true"><i class="intro-dot current"></i><i class="intro-dot"></i><i class="intro-dot"></i></div>
 <div class="intro-actions"><button id="intro-repeat" class="tool" aria-label="Uitleg nog eens beluisteren"><img src="assets/speaker-round.webp" alt=""></button><button id="intro-next" class="wood start" aria-label="Volgende stap"><svg><use href="#play"/></svg></button></div>
 </dialog>
+<dialog id="tie-intro" aria-label="Gelijkspel: gooi allebei. De hoogste worp wint het spel.">
+<div class="tie-example" role="img" aria-label="Voorbeeld: vijf stippen winnen van twee stippen">
+<div class="example-die"><i class="pip"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="pip"></i></div>
+<div class="example-winner"><span class="example-star" aria-hidden="true"></span><div class="example-die"><i class="pip"></i><i></i><i class="pip"></i><i></i><i class="pip"></i><i></i><i class="pip"></i><i></i><i class="pip"></i></div></div>
+</div>
+<button id="tie-repeat" class="tool" aria-label="Uitleg nog eens beluisteren"><img src="assets/speaker-round.webp" alt=""></button>
+<button id="tie-start" class="wood start" aria-label="Extra worpen beginnen"><svg><use href="#play"/></svg></button>
+</dialog>
 <dialog id="leave"><h2>Terug naar het begin?</h2><button class="wood" id="continue" aria-label="Verder spelen"><svg><use href="#play"/></svg></button><button class="cottage" id="quit" aria-label="Naar het begin"><img src="assets/home-round.webp" alt=""></button></dialog>
 <dialog id="result" aria-labelledby="result-title"><img class="result-leaves left" src="assets/leaves.webp" alt=""><img class="result-leaves right" src="assets/leaves.webp" alt=""><h2 id="result-title" class="sr"></h2><div id="result-players"></div><button class="wood" id="again" aria-label="Nog een keer"><svg><use href="#again-icon"/></svg></button><button class="cottage" id="result-home" aria-label="Anders spelen"><img src="assets/home-round.webp" alt=""></button></dialog>
-</main><script type="module" src="app.js?v=20261104c"></script>
+</main><script type="module" src="app.js?v=20261105a"></script>
 </body></html>

@@ -19,63 +19,86 @@ test('the starter must let the other player complete the round before winning',(
  assert.equal(g.winner,0);assert.equal(g.phase,'ended');assert.equal(score(g,0),6);
  assert.equal(advanceTurn(g).ok,false);assert.equal(roll(g,1).ok,false);
 });
-test('all six faces remain available during the first six own throws',()=>{
- for(let turns=0;turns<6;turns++)for(let mask=0;mask<64;mask++){
+test('all six faces remain equally available during the first four own throws',()=>{
+ for(let turns=0;turns<4;turns++)for(let mask=0;mask<64;mask++){
   const count=mask.toString(2).replaceAll('0','').length;
   if(count>turns||count%2!==turns%2||count===6)continue;
   const g=createGame();g.players[0].turnsTaken=turns;g.players[0].cards=Array.from({length:6},(_,i)=>!!(mask&(1<<i)));
   assert.deepEqual(Array.from({length:6},(_,i)=>nextRoll(g,()=>i/6)),[1,2,3,4,5,6]);
  }
 });
-test('every allowed late outcome preserves the twelve-turn bound, including setbacks when affordable',()=>{
- for(let turns=6;turns<12;turns++)for(let mask=0;mask<63;mask++){
+test('every allowed late outcome can finish at the target, without finishing early',()=>{
+ for(const target of [6,8,10])for(let turns=4;turns<target;turns++)for(let mask=0;mask<63;mask++){
   const g=createGame(),p=g.players[0];p.turnsTaken=turns;p.cards=Array.from({length:6},(_,i)=>!!(mask&(1<<i)));
+  g.finishTargets=[target,10];
   const count=score(g,0),missing=6-count;
-  if(count%2!==turns%2||missing>12-turns)continue;
+  if(count>turns||count%2!==turns%2||missing>target-turns)continue;
   const seen=new Set(Array.from({length:60},(_,i)=>nextRoll(g,()=>i/60)));
-  for(let n=1;n<=6;n++)assert.equal(seen.has(n),missing+(p.cards[n-1]?1:-1)<=11-turns);
+  for(let n=1;n<=6;n++){
+   const remaining=missing+(p.cards[n-1]?1:-1),left=target-turns-1;
+   assert.equal(seen.has(n),remaining<=left&&(remaining>0||left===0));
+  }
  }
 });
-test('the tenth throw may still remove an acorn',()=>{
- const g=createGame();g.players[0]={turnsTaken:9,cards:[true,true,true,true,true,false]};
+test('the eighth throw may still remove an acorn before a tenth-turn finish',()=>{
+ const g=createGame();g.finishTargets=[10,10];g.players[0]={turnsTaken:7,cards:[true,true,true,true,true,false]};
  const n=nextRoll(g,()=>0);assert.equal(n,1);assert.equal(play(g,n).turnedDown,false);
  assert.equal(score(g,0),4);
 });
-test('the leader after six own turns can still lose',()=>{
+test('the leader after four own turns can still lose',()=>{
  const g=createGame({mode:'friend'});
- g.players[0]={turnsTaken:6,cards:[true,true,true,true,false,false]};
- g.players[1]={turnsTaken:6,cards:[true,true,false,false,false,false]};
+ g.finishTargets=[10,8];
+ g.players[0]={turnsTaken:4,cards:[true,true,true,true,false,false]};
+ g.players[1]={turnsTaken:4,cards:[true,true,false,false,false,false]};
  const sequence=[1,3,2,4,1,5,2,6];
  for(const n of sequence){
   const allowed=new Set(Array.from({length:60},(_,i)=>nextRoll(g,()=>i/60)));
   assert.ok(allowed.has(n));play(g,n);if(g.phase!=='ended')advanceTurn(g);
  }
- assert.equal(g.winner,1);assert.equal(g.players[1].turnsTaken,10);
+ assert.equal(g.winner,1);assert.equal(g.players[1].turnsTaken,8);
 });
-test('20000 seeded games have fair winners, varied finishing rounds and at most twelve card turns',()=>{
- const wins=[0,0],rounds=new Set();let tiebreaks=0;
- for(let seed=1;seed<=20000;seed++){
+test('100000 games have 20% simultaneous finishes, fair winners and six/eight/ten turn games',t=>{
+ const wins=[0,0],rounds={6:0,8:0,10:0};let tiebreaks=0;
+ for(let seed=1;seed<=100000;seed++){
   let state=seed;const rng=()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296;};
   const g=createGame({mode:seed%2?'computer':'friend'});
   for(let steps=0;steps<100&&g.phase!=='ended';steps++){
    const n=nextRoll(g,rng);if(g.tiebreak)roll(g,n);else play(g,n);
-   if(g.phase!=='ended')advanceTurn(g);
+   if(g.phase!=='ended')advanceTurn(g,rng);
   }
-  assert.equal(g.phase,'ended');const winner=g.players[g.winner];assert.ok(winner.turnsTaken>=6&&winner.turnsTaken<=12);
+  assert.equal(g.phase,'ended');const winner=g.players[g.winner];assert.ok([6,8,10].includes(winner.turnsTaken));
   assert.equal(g.players[0].turnsTaken,g.players[1].turnsTaken);
   if(g.tiebreak)tiebreaks++;
-  rounds.add(winner.turnsTaken);
+  rounds[winner.turnsTaken]++;
+  assert.equal(g.finishTargets[0]===g.finishTargets[1],!!g.tiebreak);
+  assert.equal(winner.turnsTaken,Math.min(...g.finishTargets));
   assert.equal(score(g,g.winner),6);wins[g.winner]++;
  }
- assert.ok(Math.abs(wins[0]/20000-.5)<.012,`Observed wins: ${wins}`);
- assert.ok(tiebreaks/20000<.4,`Too many simultaneous finishes: ${tiebreaks}`);
- assert.deepEqual([...rounds].sort((a,b)=>a-b),[6,8,10,12]);
+ assert.ok(Math.abs(wins[0]/100000-.5)<.005,`Observed wins: ${wins}`);
+ assert.ok(Math.abs(tiebreaks/100000-.2)<.005,`Observed simultaneous finishes: ${tiebreaks}`);
+ assert.ok(Object.values(rounds).every(n=>n>0));
+ t.diagnostic(JSON.stringify({games:100000,wins,simultaneousFinishes:tiebreaks,rounds}));
 });
-test('later turns favour missing numbers but retain a fifteen percent setback chance when possible',()=>{
+test('later paths retain a twenty-five percent setback chance when both options fit the target',()=>{
  const g=createGame();g.players[0]={turnsTaken:6,cards:[true,true,true,true,false,false]};
+ g.finishTargets=[10,10];
  let setbacks=0;
  for(let i=0;i<10000;i++)if(nextRoll(g,()=>i/10000)<=4)setbacks++;
- assert.equal(setbacks,1500);
+ assert.equal(setbacks,2500);
+});
+
+test('all possible states after four turns receive a feasible and symmetric pair of targets',()=>{
+ for(const a of [0,2,4])for(const b of [0,2,4])for(let i=0;i<100;i++){
+  function planned(x,y){
+   const g=createGame();g.phase='between';g.current=1;
+   g.players=[x,y].map(count=>({turnsTaken:4,cards:Array.from({length:6},(_,n)=>n<count)}));
+   let call=0;advanceTurn(g,()=>call++===0?i/100:.5);return g.finishTargets;
+  }
+  const pair=planned(a,b),swapped=planned(b,a);
+  assert.ok(pair[0]>=10-a&&pair[1]>=10-b);
+  assert.equal(pair[0]===pair[1],swapped[0]===swapped[1]);
+  if(a===0&&b===0)assert.deepEqual(pair,[10,10]);
+ }
 });
 
 function tiedGame(){
