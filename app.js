@@ -1,4 +1,4 @@
-import {RecordedVoice} from './voice.mjs?v=20261105b';
+import {RecordedVoice} from './voice.mjs?v=20261105c';
 import {createGame,nextRoll,roll,select,advanceTurn,score,pause,resume} from './engine.mjs?v=20261105a';
 import {dieTransform,rollKeyframes} from './dice.mjs?v=20261104b';
 import {ForestAudio} from './audio.mjs?v=20261101a';
@@ -26,10 +26,7 @@ function speak(words,onDone) {
   recordedVoice.play(words,{
     onStart:()=>{if($('intro').open)clearTimeout(introTimer);if($('tie-intro').open)clearTieJobs();},
     onEnd:onDone,
-    onError:()=>{
-      if(!('speechSynthesis' in window)){onDone?.();return;}
-      try{const u=new SpeechSynthesisUtterance(words);u.lang='nl-NL';u.rate=.86;u.onend=onDone;u.onerror=onDone;speechSynthesis.speak(u);}catch{onDone?.();}
-    }
+    onError:(error)=>{console.warn('Stemopname kon niet worden afgespeeld:',words,error);onDone?.();}
   });
 }
 function silence(){recordedVoice.stop();try{speechSynthesis.cancel();}catch{}}

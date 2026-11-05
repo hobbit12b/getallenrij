@@ -13,7 +13,7 @@ export const VOICE_FILES={
   "Egel is aan de beurt.": "hulp_egel.mp3",
   "Nu is de ander aan de beurt.": "hulp_wisselen.mp3",
   "Nog een keer spelen?": "hulp_opnieuw.mp3",
-  "Eekhoorn heeft zes eikels. Egel mag nog 1 keer!": "laatste_beurt.mp3",
+  "Eekhoorn heeft zes eikels. Egel mag nog één keer!": "laatste_beurt.mp3",
   "Gelijkspel! Gooi allebei. Wie het meeste gooit, wint het spel!": "gelijk_zes.mp3",
   "Evenveel! Gooi allebei nog een keer.": "gelijk_opnieuw.mp3",
   "Gooi de dobbelsteen. Wie het meeste gooit, wint het spel!": "hulp_beslissingsworp.mp3",

@@ -2,6 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {RecordedVoice,VOICE_FILES} from '../voice.mjs';
+test('all literal spoken app lines map to a recording, with no synthetic fallback',()=>{
+ const app=fs.readFileSync(new URL('../app.js',import.meta.url),'utf8');
+ const lines=[...app.matchAll(/speak\('([^']+)'/g)].map(m=>m[1]);
+ const intro=app.match(/const introWords=\[([\s\S]+?)\];/)[1];
+ lines.push(...[...intro.matchAll(/'([^']+)'/g)].map(m=>m[1]));
+ for(const words of lines)assert.ok(VOICE_FILES[words],words);
+ assert.equal(VOICE_FILES['Eekhoorn heeft zes eikels. Egel mag nog één keer!'],'laatste_beurt.mp3');
+ assert.ok(!app.includes('SpeechSynthesisUtterance'));
+});
 test('all twenty recorded lines exist, including numbered hints',()=>{
  assert.equal(Object.keys(VOICE_FILES).length,20);
  for(const file of Object.values(VOICE_FILES))assert.ok(fs.statSync(new URL('../assets/voice/'+file,import.meta.url)).size>1000);
