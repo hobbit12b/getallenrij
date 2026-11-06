@@ -21,13 +21,16 @@ export const VOICE_FILES={
   "Egel heeft gewonnen!": "winnaar_egel.mp3"
 };
 
+// Optional menu recordings, supplied separately from the twenty game lines.
+export const MENU_VOICE_FILES={'Eén speler':'keuze_1_speler.mp3','Twee spelers':'keuze_2_spelers.mp3'};
+
 export class RecordedVoice {
   constructor(getContext,fetcher=(url)=>fetch(url)){this.getContext=getContext;this.fetcher=fetcher;this.cache=new Map();this.generation=0;this.source=null;}
   stop(){this.generation++;if(this.source){this.source.onended=null;try{this.source.stop();}catch{}this.source.disconnect();this.source=null;}}
   async play(words,{onStart,onEnd,onError}={}){
     this.stop();const token=this.generation;
     try{
-      const file=VOICE_FILES[words];if(!file)throw new Error('Unknown voice line');
+      const file=VOICE_FILES[words]||MENU_VOICE_FILES[words];if(!file)throw new Error('Unknown voice line');
       const context=this.getContext();if(!context)throw new Error('Audio not unlocked');
       if(!this.cache.has(file))this.cache.set(file,this.fetcher('assets/voice/'+file).then(r=>{if(!r.ok)throw new Error('Voice unavailable');return r.arrayBuffer();}).then(bytes=>context.decodeAudioData(bytes)).catch(e=>{this.cache.delete(file);throw e;}));
       const buffer=await this.cache.get(file);if(token!==this.generation)return;

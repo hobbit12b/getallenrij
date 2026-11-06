@@ -1,4 +1,4 @@
-import {RecordedVoice} from './voice.mjs?v=20261105d';
+import {RecordedVoice} from './voice.mjs?v=20261106a';
 import {createGame,nextRoll,roll,select,advanceTurn,score,pause,resume} from './engine.mjs?v=20261105a';
 import {dieTransform,rollKeyframes} from './dice.mjs?v=20261104b';
 import {ForestAudio} from './audio.mjs?v=20261101a';
@@ -111,9 +111,32 @@ function showDie(n){
   document.querySelectorAll('.die-face').forEach(f=>f.classList.toggle('top',+f.dataset.face===n));
   $('die').setAttribute('aria-label',`Bovenkant: ${n} ${n===1?'stip':'stippen'}`);
 }
-document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{
-  settings.mode=b.dataset.mode;
-  document.querySelectorAll('[data-mode]').forEach(x=>{x.classList.toggle('selected',x===b);x.setAttribute('aria-pressed',String(x===b));});
+document.addEventListener('click',event=>{
+  const button=event.target.closest('button');
+  if(!button||button.disabled)return;
+  button.classList.add('tap-feedback');
+  clearTimeout(button.feedbackTimer);
+  button.feedbackTimer=setTimeout(()=>button.classList.remove('tap-feedback'),220);
+},true);
+document.querySelectorAll('[data-mode]').forEach(b=>{
+  let lastSpoken=-Infinity;
+  const announce=()=>{
+    if(performance.now()-lastSpoken<1200)return;
+    lastSpoken=performance.now();
+    const words=b.dataset.mode==='computer'?'Eén speler':'Twee spelers';
+    $('announcement').textContent=words;
+    // These optional recordings can be added without changing the game code.
+    recordedVoice.play(words);
+  };
+  b.addEventListener('pointerenter',event=>{
+    if(event.pointerType==='mouse'&&forestAudio.context?.state==='running')announce();
+  });
+  b.addEventListener('focus',()=>{if(forestAudio.context?.state==='running')announce();});
+  b.onclick=()=>{
+    forestAudio.unlock();announce();
+    settings.mode=b.dataset.mode;
+    document.querySelectorAll('[data-mode]').forEach(x=>{x.classList.toggle('selected',x===b);x.setAttribute('aria-pressed',String(x===b));});
+  };
 });
 function render(){
   for(let p=0;p<2;p++){

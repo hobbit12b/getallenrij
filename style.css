@@ -6,7 +6,8 @@ body{font-family:ui-rounded,'Arial Rounded MT Bold',system-ui,sans-serif;backgro
 button{font:inherit;cursor:pointer;touch-action:manipulation;-webkit-appearance:none;user-select:none}
 button:disabled{cursor:default}
 button:focus-visible{outline:4px solid white;outline-offset:4px}
-button:active:not(:disabled){scale:.96}
+button{transition:scale .14s ease-out}
+button:active:not(:disabled),button.tap-feedback:not(:disabled){scale:1.045}
 [hidden]{display:none!important}
 .defs,.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
 svg{width:34px;height:34px;fill:none;stroke:currentColor;stroke-width:2.7;stroke-linecap:round;stroke-linejoin:round}
@@ -66,7 +67,7 @@ h1{font-size:clamp(35px,7cqw,66px);color:#fff0b7;text-shadow:3px 4px #713c13,-2p
 .friends{display:flex;width:100%;height:30%;justify-content:center;pointer-events:none}
 .friends img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 6px 3px #54392044)}
 .choices{width:100%;display:flex;height:23%;gap:3%;flex-shrink:0}
-.choices button{position:relative;flex:1;border:0;border-radius:14%;background:url('assets/menu-plaque.svg') center/100% 100% no-repeat;box-shadow:none;padding:0;display:block;filter:drop-shadow(0 5px 3px #39261566);isolation:isolate;transition:filter .2s,transform .2s}
+.choices button{position:relative;flex:1;border:0;border-radius:14%;background:url('assets/menu-plaque.svg') center/100% 100% no-repeat;box-shadow:none;padding:0;display:block;filter:drop-shadow(0 5px 3px #39261566);isolation:isolate;transition:filter .2s,transform .2s,scale .14s ease-out}
 .choices .selected{filter:drop-shadow(0 0 5px #ffdb65) drop-shadow(0 5px 3px #39261566)}
 .choices .selected:after{content:'✓';position:absolute;right:10%;bottom:12%;display:grid;place-items:center;width:clamp(22px,3.6cqw,30px);aspect-ratio:1;border:2px solid #fff4cb;border-radius:50%;background:#588138;color:#fff8da;font-size:clamp(17px,2.7cqw,24px);font-weight:900;box-shadow:0 2px 3px #52351b66}
 .choice-art{position:absolute;inset:23% 17% 33%;display:flex;align-items:center;justify-content:center;gap:0}
